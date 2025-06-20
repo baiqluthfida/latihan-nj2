@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import moment from "moment-timezone";
+import { Toaster, toast } from "sonner";
 
 export default function G_absen7() {
   const [guru, setGuru] = useState(null);
@@ -35,7 +36,7 @@ export default function G_absen7() {
 
   const handleSimpan = async () => {
     if (!tanggal) {
-      alert("Tanggal harus diisi.");
+      toast.error("Tanggal harus diisi.");
       return;
     }
 
@@ -62,10 +63,14 @@ export default function G_absen7() {
 
       if (!res.ok) throw new Error("Gagal menyimpan data");
 
-      alert("Absensi berhasil disimpan.");
+      toast.success("Absensi berhasil disimpan.");
+
+      setAbsensiData(siswa.map(() => ({ status: "", deskripsi: "" })));
+      setDeskripsiUmum("");
+      setTanggal("");
     } catch (error) {
       console.error("Gagal menyimpan data:", error);
-      alert("Terjadi kesalahan saat menyimpan absensi.");
+      toast.error("Terjadi kesalahan saat menyimpan absensi.");
     }
   };
 
@@ -97,6 +102,14 @@ export default function G_absen7() {
 
   return (
     <div>
+      <Toaster
+        position="center-center"
+        richColors
+        toastOptions={{
+          className: "text-lg font-semibold", // teks besar
+          style: { padding: "1.5rem", borderRadius: "1rem" }, // tampilan lebih besar
+        }}
+      />
       {/* Navbar */}
       <nav className="flex items-center bg-white pl-6 py-3">
         <img className="h-15 w-16" src="/logoYayasan.png" alt="" />
@@ -281,6 +294,7 @@ export default function G_absen7() {
                           type="radio"
                           name={`absen${i}`}
                           value={val}
+                          checked={absensiData[i]?.status === val}
                           onChange={() => handleStatusChange(i, val)}
                         />
                       </td>
@@ -291,6 +305,7 @@ export default function G_absen7() {
                         type="text"
                         placeholder="Tulis deskripsi"
                         className="px-2 py-1 rounded-md border border-gray-300 w-full text-sm text-[#272727]"
+                        value={absensiData[i]?.deskripsi || ""}
                         onChange={(e) =>
                           handleDeskripsiChange(i, e.target.value)
                         }

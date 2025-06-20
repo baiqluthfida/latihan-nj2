@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
+import { Toaster, toast } from "sonner";
 
 export default function Home() {
   const [nip, setNip] = useState("");
@@ -11,7 +12,10 @@ export default function Home() {
 
     if (nip === "admin" && password === "admin123") {
       // Redirect ke halaman A_beranda
-      router.push("/A_beranda");
+      toast.success("Login berhasil!");
+      setTimeout(() => {
+        router.push("/A_beranda");
+      }, 1000);
       return;
     }
 
@@ -25,15 +29,27 @@ export default function Home() {
 
     if (res.ok) {
       // Simpan data guru ke localStorage
-      localStorage.setItem("guru", JSON.stringify(data.data));
-      router.push("/G_bio");
+      toast.success("Login berhasil!");
+      setTimeout(() => {
+        localStorage.setItem("guru", JSON.stringify(data.data));
+        router.push("/G_bio");
+      }, 1000);
     } else {
-      alert(data.message);
+      toast.error(data.message || "Login gagal!");
     }
   };
 
   return (
     <div>
+      <Toaster
+        position="center-center"
+        richColors
+        toastOptions={{
+          className: "text-lg font-semibold", // teks besar
+          style: { padding: "1.5rem", borderRadius: "1rem" }, // tampilan lebih besar
+        }}
+      />
+
       <nav className="flex items-center bg-white pl-6 py-3">
         <img className="h-15 w-16 p" src="/logoYayasan.png" alt="" />
         <h1 className="text-2xl font-bold text-[#000000] pl-5">
@@ -41,7 +57,6 @@ export default function Home() {
           RIADHUL ULUM
         </h1>
       </nav>
-
       <div className="min-h-screen flex">
         {/* Kiri: Gambar dan teks */}
         <div className="w-2/3 relative bg-black">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { Toaster, toast } from "sonner";
 
 export default function RekapAbsensi() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function RekapAbsensi() {
     // Cek semua parameter sudah ada
     if (tanggal_awal && tanggal_akhir && guru_id) {
       setIsLoading(true);
+      toast.success("Memuat data rekap...");
       setError(null);
 
       fetch(
@@ -24,18 +26,21 @@ export default function RekapAbsensi() {
           console.log("Response API:", data); // Debug API response
           // Pastikan data ada dan berbentuk array
           if (data && Array.isArray(data.data)) {
+            toast.success("Data rekap berhasil dimuat.");
             setDataRekap(data.data);
           } else if (Array.isArray(data)) {
             // Jika API langsung mengembalikan array tanpa object pembungkus 'data'
             setDataRekap(data);
           } else {
             setError("Format data tidak sesuai");
+            toast.error("Format data tidak sesuai");
           }
           setIsLoading(false);
         })
         .catch((err) => {
           console.error("Fetch error:", err);
           setError("Gagal memuat data rekap.");
+          toast.error("Gagal memuat data rekap.");
           setIsLoading(false);
         });
     } else {
@@ -65,6 +70,14 @@ export default function RekapAbsensi() {
 
   return (
     <div>
+      <Toaster
+        position="center-center"
+        richColors
+        toastOptions={{
+          className: "text-lg font-semibold", // teks besar
+          style: { padding: "1.5rem", borderRadius: "1rem" }, // tampilan lebih besar
+        }}
+      />
       <nav className="flex items-center bg-white pl-6 py-3">
         <img className="h-15 w-16 p" src="/logoYayasan.png" alt="" />
         <h1 className="text-2xl font-bold text-[#000000] pl-5">
@@ -104,7 +117,7 @@ export default function RekapAbsensi() {
             </span>
           </Link>
         </div>
-        <div className=" bg-[#EEEFF3] p-8 text-[#000000] w-full">
+        <div className=" bg-[#EEEFF3] p-8 text-[#000000] w-full h-full">
           <h1 className="text-3xl font-bold mb-4 text-[#1F581A]">
             Rekap Absensi Siswa
           </h1>
