@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import moment from "moment-timezone";
+import { Toaster, toast } from "sonner";
 
 export default function G_absen9() {
   const [guru, setGuru] = useState(null);
@@ -10,8 +12,48 @@ export default function G_absen9() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const tanggalUTC = "2025-05-24T07:00:00.000Z";
+  const waktuWITA = moment
+    .utc(tanggalUTC)
+    .tz("Asia/Makassar")
+    .format("DD MMMM YYYY HH:mm:ss");
+
+  console.log(waktuWITA); // 24 Mei 2025 15:00:00
 
   const [absensiData, setAbsensiData] = useState([]);
+
+  const checkAbsensiLama = async (selectedDate) => {
+    if (!guru || !selectedDate) return;
+
+    try {
+      const res = await fetch(
+        `/api/absensi?siswa_kelas=9&tanggal=${selectedDate}&pengampu=${guru.pengampu}&id_guru=${guru.id}`
+      );
+      const result = await res.json();
+
+      if (Array.isArray(result) && result.length > 0) {
+        toast.info(
+          "Absensi sebelumnya ditemukan. Form dimuat ulang untuk edit."
+        );
+        const updatedAbsensi = siswa.map((s) => {
+          const data = result.find((d) => d.id_siswa === s.id);
+          return {
+            status: data?.status || "",
+            deskripsi: data?.deskripsi || "",
+          };
+        });
+        setAbsensiData(updatedAbsensi);
+        setDeskripsiUmum(result[0]?.keterangan || "");
+      } else {
+        // Kalau tidak ada data, reset ke kosong
+        setAbsensiData(siswa.map(() => ({ status: "", deskripsi: "" })));
+        setDeskripsiUmum("");
+      }
+    } catch (err) {
+      console.error("Gagal memeriksa absensi sebelumnya:", err);
+      toast.error("Gagal mengambil absensi lama.");
+    }
+  };
 
   const handleStatusChange = (index, status) => {
     const newData = [...absensiData];
@@ -27,7 +69,7 @@ export default function G_absen9() {
 
   const handleSimpan = async () => {
     if (!tanggal) {
-      alert("Tanggal harus diisi.");
+      toast.error("Tanggal harus diisi.");
       return;
     }
 
@@ -54,12 +96,22 @@ export default function G_absen9() {
 
       if (!res.ok) throw new Error("Gagal menyimpan data");
 
-      alert("Absensi berhasil disimpan.");
+      toast.success("Absensi berhasil disimpan.");
+
+      setAbsensiData(siswa.map(() => ({ status: "", deskripsi: "" })));
+      setDeskripsiUmum("");
+      setTanggal("");
     } catch (error) {
       console.error("Gagal menyimpan data:", error);
-      alert("Terjadi kesalahan saat menyimpan absensi.");
+      toast.error("Terjadi kesalahan saat menyimpan absensi.");
     }
   };
+
+  useEffect(() => {
+    if (guru && siswa.length > 0 && tanggal) {
+      checkAbsensiLama(tanggal);
+    }
+  }, [guru, siswa, tanggal]);
 
   useEffect(() => {
     const storedGuru = localStorage.getItem("guru");
@@ -89,6 +141,14 @@ export default function G_absen9() {
 
   return (
     <div>
+      <Toaster
+        position="center-center"
+        richColors
+        toastOptions={{
+          className: "text-lg font-semibold", // teks besar
+          style: { padding: "1.5rem", borderRadius: "1rem" }, // tampilan lebih besar
+        }}
+      />
       {/* Navbar */}
       <nav className="flex items-center bg-white pl-6 py-3">
         <img className="h-15 w-16" src="/logoYayasan.png" alt="" />
@@ -170,8 +230,12 @@ export default function G_absen9() {
                 <input
                   type="date"
                   value={tanggal}
-                  onChange={(e) => setTanggal(e.target.value)}
+                  onChange={(e) => {
+                    const selected = e.target.value;
+                    setTanggal(selected); // 🔁 cek apakah sudah ada data
+                  }}
                   className="text-[#4c4d4c] w-[200px] text-[18px] px-5 py-1 bg-[#d9d9d9] rounded-xl"
+                  placeholder={waktuWITA}
                 />
               </div>
             </div>
@@ -233,7 +297,7 @@ export default function G_absen9() {
                         return;
                       }
                       setIsModalOpen(false);
-                      window.location.href = `/G_rekap?tanggal_awal=${startDate}&tanggal_akhir=${endDate}&guru_id=${guru.id}`;
+                      window.location.href = `/G_rekap9/?tanggal_awal=${startDate}&tanggal_akhir=${endDate}&guru_id=${guru.id}&kelas=9`;
                     }}
                     className="bg-[#35732f] text-white px-4 py-2 rounded-lg"
                   >
@@ -272,6 +336,7 @@ export default function G_absen9() {
                           type="radio"
                           name={`absen${i}`}
                           value={val}
+                          checked={absensiData[i]?.status === val}
                           onChange={() => handleStatusChange(i, val)}
                         />
                       </td>
@@ -282,6 +347,7 @@ export default function G_absen9() {
                         type="text"
                         placeholder="Tulis deskripsi"
                         className="px-2 py-1 rounded-md border border-gray-300 w-full text-sm text-[#272727]"
+                        value={absensiData[i]?.deskripsi || ""}
                         onChange={(e) =>
                           handleDeskripsiChange(i, e.target.value)
                         }

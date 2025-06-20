@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { Toaster, toast } from "sonner";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function RekapAbsensi() {
   const router = useRouter();
@@ -11,6 +13,29 @@ export default function RekapAbsensi() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text("Rekap Absensi Siswa", 14, 15);
+
+    autoTable(doc, {
+      startY: 25,
+      head: [["Nama", "Kelas", "Mapel", "Hadir", "Alpa", "Sakit", "Izin"]],
+      body: dataRekap.map((item) => [
+        item.nama,
+        item.kelas,
+        item.mapel,
+        item.hadir,
+        item.alpa,
+        item.sakit,
+        item.izin,
+      ]),
+    });
+
+    doc.save("rekap-absensi.pdf");
+  };
+
   useEffect(() => {
     // Cek semua parameter sudah ada
     if (tanggal_awal && tanggal_akhir && guru_id) {
@@ -19,7 +44,7 @@ export default function RekapAbsensi() {
       setError(null);
 
       fetch(
-        `/api/rekap?tanggal_awal=${tanggal_awal}&tanggal_akhir=${tanggal_akhir}&guru_id=${guru_id}`
+        `/api/rekap?tanggal_awal=${tanggal_awal}&tanggal_akhir=${tanggal_akhir}&guru_id=${guru_id}&kelas=8`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -121,6 +146,16 @@ export default function RekapAbsensi() {
           <h1 className="text-3xl font-bold mb-4 text-[#1F581A]">
             Rekap Absensi Siswa
           </h1>
+
+          {dataRekap.length > 0 && (
+            <button
+              onClick={handleExportPDF}
+              className="bg-[#35732F] text-white px-4 py-2 mb-4 rounded-lg shadow-md hover:bg-green-700 transition"
+            >
+              <i className="fa-solid fa-file-pdf mr-2" />
+              Ekspor ke PDF
+            </button>
+          )}
 
           {dataRekap.length === 0 ? (
             <p className="text-center text-gray-600 mt-6">

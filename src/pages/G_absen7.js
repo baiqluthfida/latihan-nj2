@@ -22,6 +22,39 @@ export default function G_absen7() {
 
   const [absensiData, setAbsensiData] = useState([]);
 
+  const checkAbsensiLama = async (selectedDate) => {
+    if (!guru || !selectedDate) return;
+
+    try {
+      const res = await fetch(
+        `/api/absensi?siswa_kelas=7&tanggal=${selectedDate}&pengampu=${guru.pengampu}&id_guru=${guru.id}`
+      );
+      const result = await res.json();
+
+      if (Array.isArray(result) && result.length > 0) {
+        toast.info(
+          "Absensi sebelumnya ditemukan. Form dimuat ulang untuk edit."
+        );
+        const updatedAbsensi = siswa.map((s) => {
+          const data = result.find((d) => d.id_siswa === s.id);
+          return {
+            status: data?.status || "",
+            deskripsi: data?.deskripsi || "",
+          };
+        });
+        setAbsensiData(updatedAbsensi);
+        setDeskripsiUmum(result[0]?.keterangan || "");
+      } else {
+        // Kalau tidak ada data, reset ke kosong
+        setAbsensiData(siswa.map(() => ({ status: "", deskripsi: "" })));
+        setDeskripsiUmum("");
+      }
+    } catch (err) {
+      console.error("Gagal memeriksa absensi sebelumnya:", err);
+      toast.error("Gagal mengambil absensi lama.");
+    }
+  };
+
   const handleStatusChange = (index, status) => {
     const newData = [...absensiData];
     newData[index] = { ...newData[index], status };
@@ -73,6 +106,12 @@ export default function G_absen7() {
       toast.error("Terjadi kesalahan saat menyimpan absensi.");
     }
   };
+
+  useEffect(() => {
+    if (guru && siswa.length > 0 && tanggal) {
+      checkAbsensiLama(tanggal);
+    }
+  }, [guru, siswa, tanggal]);
 
   useEffect(() => {
     const storedGuru = localStorage.getItem("guru");
@@ -191,7 +230,10 @@ export default function G_absen7() {
                 <input
                   type="date"
                   value={tanggal}
-                  onChange={(e) => setTanggal(e.target.value)}
+                  onChange={(e) => {
+                    const selected = e.target.value;
+                    setTanggal(selected); // 🔁 cek apakah sudah ada data
+                  }}
                   className="text-[#4c4d4c] w-[200px] text-[18px] px-5 py-1 bg-[#d9d9d9] rounded-xl"
                   placeholder={waktuWITA}
                 />
@@ -255,7 +297,7 @@ export default function G_absen7() {
                         return;
                       }
                       setIsModalOpen(false);
-                      window.location.href = `/G_rekap?tanggal_awal=${startDate}&tanggal_akhir=${endDate}&guru_id=${guru.id}`;
+                      window.location.href = `/G_rekap7/?tanggal_awal=${startDate}&tanggal_akhir=${endDate}&guru_id=${guru.id}&kelas=7`;
                     }}
                     className="bg-[#35732f] text-white px-4 py-2 rounded-lg"
                   >
