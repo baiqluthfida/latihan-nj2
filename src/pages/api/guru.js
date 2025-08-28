@@ -1,4 +1,4 @@
-import { db } from "/public/lib/db";
+import { db } from "/src/lib/db";
 
 export default async function handler(req, res) {
   const { method } = req;

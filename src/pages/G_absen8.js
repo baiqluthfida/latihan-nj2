@@ -159,12 +159,12 @@ export default function G_absen8() {
       </nav>
 
       {/* Layout: Sidebar + Konten */}
-      <div className="flex min-h-screen">
+      <div className="flex h-screen">
         {/* Sidebar */}
-        <div className="w-1/4 bg-[#1F581A] p-8 flex flex-col">
+        <div className="w-1/4 h-full bg-[#1F581A] pt-10  overflow-y-auto">
           <Link
-            href="G_bio"
-            className="text-[15px] font-bold flex items-center gap-1 text-[#ffffff]"
+            href="/G_bio"
+            className="w-full  text-[15px] font-bold flex items-center gap-1 text-white py-2 px-4 pr-4"
           >
             <span className="text-[25px] font-bold flex items-center">
               <i className="fa-solid fa-user text-[25px] pr-5" />
@@ -173,27 +173,36 @@ export default function G_absen8() {
           </Link>
 
           <Link
-            href="G_absen1"
-            className="text-[15px] font-bold flex items-center gap-1 text-[#ffffff] pt-7"
+            href="/G_absen1"
+            className="text-[15px] bg-[#85a482] font-bold flex items-center gap-1 text-white py-2 mt-7 pl-4"
           >
             <span className="text-[25px] font-bold flex items-center">
               <i className="fa-solid fa-calendar-days text-[25px] pr-5" />
               Absen
             </span>
           </Link>
-          <Link
-            href="/"
-            className="text-[15px] font-bold flex items-center gap-1 text-[#ffffff] pt-7"
+
+          {/* Link Logout */}
+          <button
+            onClick={() => {
+              toast.success("Anda keluar dari sistem absen");
+              localStorage.removeItem("guru");
+
+              // Delay 1.5 detik agar toast sempat tampil sebelum redirect
+              setTimeout(() => {
+                router.push("/");
+              }, 1500);
+            }}
+            className="text-[15px] font-bold flex items-center gap-1 text-white py-2 mt-7 pl-4"
           >
             <span className="text-[25px] font-bold flex items-center">
               <i className="fa-solid fa-right-from-bracket text-[25px] pr-5" />
               Log Out
             </span>
-          </Link>
+          </button>
         </div>
-
         {/* Konten */}
-        <div className="w-3/4 flex-1 bg-[#EEEFF3]">
+        <div className="w-3/4 flex-1 bg-[#EEEFF3] overflow-y-auto pb-20">
           <div className="bg-[#D9D9D9] py-4 px-7">
             <h1 className="text-[#35732F] font-bold text-[50px]">
               {guru.pengampu} Kelas 8

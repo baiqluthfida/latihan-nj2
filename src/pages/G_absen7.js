@@ -8,6 +8,10 @@ export default function G_absen7() {
   const [siswa, setSiswa] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tanggal, setTanggal] = useState("");
+  const [totalHadir, setTotalHadir] = useState(0);
+  const [totalAlpa, setTotalAlpa] = useState(0);
+  const [totalSakit, setTotalSakit] = useState(0);
+  const [totalIzin, setTotalIzin] = useState(0);
   const [deskripsiUmum, setDeskripsiUmum] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [startDate, setStartDate] = useState("");
@@ -71,7 +75,18 @@ export default function G_absen7() {
     if (!tanggal) {
       toast.error("Tanggal harus diisi.");
       return;
+      // ✅ Hitung total tiap status
     }
+
+    const hadir = absensiData.filter((a) => a.status === "hadir").length;
+    const alpa = absensiData.filter((a) => a.status === "alpa").length;
+    const sakit = absensiData.filter((a) => a.status === "sakit").length;
+    const izin = absensiData.filter((a) => a.status === "izin").length;
+
+    setTotalHadir(hadir);
+    setTotalAlpa(alpa);
+    setTotalSakit(sakit);
+    setTotalIzin(izin);
 
     const dataToSend = siswa.map((item, index) => {
       const absensi = absensiData[index] || {};
@@ -158,13 +173,11 @@ export default function G_absen7() {
         </h1>
       </nav>
 
-      {/* Layout: Sidebar + Konten */}
-      <div className="flex min-h-screen">
-        {/* Sidebar */}
-        <div className="w-1/4 bg-[#1F581A] p-8 flex flex-col">
+      <div className="flex h-screen">
+        <div className="w-1/4 h-full bg-[#1F581A] pt-10  overflow-y-auto">
           <Link
-            href="G_bio"
-            className="text-[15px] font-bold flex items-center gap-1 text-[#ffffff]"
+            href="/G_bio"
+            className="w-full  text-[15px] font-bold flex items-center gap-1 text-white py-2 px-4 pr-4"
           >
             <span className="text-[25px] font-bold flex items-center">
               <i className="fa-solid fa-user text-[25px] pr-5" />
@@ -173,27 +186,37 @@ export default function G_absen7() {
           </Link>
 
           <Link
-            href="G_absen1"
-            className="text-[15px] font-bold flex items-center gap-1 text-[#ffffff] pt-7"
+            href="/G_absen1"
+            className="text-[15px] bg-[#85a482] font-bold flex items-center gap-1 text-white py-2 mt-7 pl-4"
           >
             <span className="text-[25px] font-bold flex items-center">
               <i className="fa-solid fa-calendar-days text-[25px] pr-5" />
               Absen
             </span>
           </Link>
-          <Link
-            href="/"
-            className="text-[15px] font-bold flex items-center gap-1 text-[#ffffff] pt-7"
+
+          {/* Link Logout */}
+          <button
+            onClick={() => {
+              toast.success("Anda keluar dari sistem absen");
+              localStorage.removeItem("guru");
+
+              // Delay 1.5 detik agar toast sempat tampil sebelum redirect
+              setTimeout(() => {
+                router.push("/");
+              }, 1500);
+            }}
+            className="text-[15px] font-bold flex items-center gap-1 text-white py-2 mt-7 pl-4"
           >
             <span className="text-[25px] font-bold flex items-center">
               <i className="fa-solid fa-right-from-bracket text-[25px] pr-5" />
               Log Out
             </span>
-          </Link>
+          </button>
         </div>
 
         {/* Konten */}
-        <div className="w-3/4 flex-1 bg-[#EEEFF3]">
+        <div className="w-3/4 flex-1 bg-[#EEEFF3] overflow-y-auto pb-20">
           <div className="bg-[#D9D9D9] py-4 px-7">
             <h1 className="text-[#35732F] font-bold text-[50px]">
               {guru.pengampu} Kelas 7
@@ -201,43 +224,74 @@ export default function G_absen7() {
           </div>
 
           {/* Form Data Guru */}
-          <div className="flex pt-5">
-            <div>
-              <h1 className="text-[#35732f] text-[18px] px-20 py-3">
-                Nama Guru
-              </h1>
-              <h1 className="text-[#35732f] text-[18px] px-20 py-3">
-                Deskripsi
-              </h1>
-              <h1 className="text-[#35732f] text-[18px] px-20 py-3">Tanggal</h1>
+          <div className="flex gap-20">
+            <div className="flex pt-5">
+              <div>
+                <h1 className="text-[#35732f] text-[18px] px-20 py-3">
+                  Nama Guru
+                </h1>
+                <h1 className="text-[#35732f] text-[18px] px-20 py-3">
+                  Deskripsi
+                </h1>
+                <h1 className="text-[#35732f] text-[18px] px-20 py-3">
+                  Tanggal
+                </h1>
+              </div>
+
+              <div className="pt-2">
+                <h1 className="text-[#4c4d4c] w-[250px] text-[18px] px-5 py-1 bg-[#d9d9d9] rounded-xl">
+                  {guru.nama}
+                </h1>
+
+                <div className="pt-4">
+                  <input
+                    type="text"
+                    value={deskripsiUmum}
+                    onChange={(e) => setDeskripsiUmum(e.target.value)}
+                    className="text-[#4c4d4c] w-[500px] text-[18px] px-5 py-1 bg-[#d9d9d9] rounded-xl"
+                  />
+                </div>
+
+                <div className="pt-4">
+                  <input
+                    type="date"
+                    value={tanggal}
+                    onChange={(e) => {
+                      const selected = e.target.value;
+                      setTanggal(selected); // 🔁 cek apakah sudah ada data
+                    }}
+                    className="text-[#4c4d4c] w-[200px] text-[18px] px-5 py-1 bg-[#d9d9d9] rounded-xl"
+                    placeholder={waktuWITA}
+                  />
+                </div>
+              </div>
             </div>
-
-            <div className="pt-2">
-              <h1 className="text-[#4c4d4c] w-[250px] text-[18px] px-5 py-1 bg-[#d9d9d9] rounded-xl">
-                {guru.nama}
-              </h1>
-
-              <div className="pt-4">
-                <input
-                  type="text"
-                  value={deskripsiUmum}
-                  onChange={(e) => setDeskripsiUmum(e.target.value)}
-                  className="text-[#4c4d4c] w-[500px] text-[18px] px-5 py-1 bg-[#d9d9d9] rounded-xl"
-                />
-              </div>
-
-              <div className="pt-4">
-                <input
-                  type="date"
-                  value={tanggal}
-                  onChange={(e) => {
-                    const selected = e.target.value;
-                    setTanggal(selected); // 🔁 cek apakah sudah ada data
-                  }}
-                  className="text-[#4c4d4c] w-[200px] text-[18px] px-5 py-1 bg-[#d9d9d9] rounded-xl"
-                  placeholder={waktuWITA}
-                />
-              </div>
+            <div>
+              {totalHadir + totalAlpa + totalSakit + totalIzin > 0 && (
+                <div className="bg-white rounded-xl shadow-lg p-4 mt-6 w-fit mx-4">
+                  <h2 className="text-lg font-bold text-[#35732F] mb-2">
+                    Rekap Absensi Hari Ini:
+                  </h2>
+                  <ul className="text-base text-gray-800">
+                    <li className="text-green-700" font-bold>
+                      {" "}
+                      Hadir: {totalHadir}
+                    </li>
+                    <li className="text-red-700" font-bold>
+                      {" "}
+                      Alpa : {totalAlpa}
+                    </li>
+                    <li className="text-yellow-700" font-bold>
+                      {" "}
+                      Sakit: {totalSakit}
+                    </li>
+                    <li className="text-blue-700" font-bold>
+                      {" "}
+                      Izin : {totalIzin}
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
 
@@ -261,7 +315,7 @@ export default function G_absen7() {
           </div>
 
           {isModalOpen && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-gray-200 bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white p-6 rounded-xl shadow-lg w-[300px]">
                 <h2 className="text-lg font-bold mb-4 text-[#35732f]">
                   Pilih Rentang Tanggal

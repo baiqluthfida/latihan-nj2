@@ -1,4 +1,4 @@
-import { db } from "/public/lib/db"; // pastikan path ke database sudah sesuai
+import { db } from "/src/lib/db"; // pastikan path ke database sudah sesuai
 
 export default async function handler(req, res) {
   if (req.method === "POST") {

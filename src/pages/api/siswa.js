@@ -1,4 +1,4 @@
-import { db } from "/public/lib/db"; // pastikan path benar
+import { db } from "/src/lib/db"; // pastikan path benar
 
 export default async function handler(req, res) {
   const { method } = req;
